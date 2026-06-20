@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#324AB6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FOOax Panel">
+<title>FOOax — Panel de Dirección</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --mag:#F1228E;--mag-l:#FDE8F4;
+  --rio:#324AB6;--rio-l:#EBF0FC;
+  --green:#00A86B;--green-l:#E1F5EE;
+  --red:#EF4444;--red-l:#FEE2E2;
+  --amber:#F59E0B;--amber-l:#FEF3C7;
+  --grad:linear-gradient(135deg,#F1228E,#FD6E29,#F2BB06);
+  --white:#fff;--bg:#F5F0FA;--text:#1A1A1A;--text2:#555;--text3:#999;
+  --border:#EAE0F5;--radius:16px;--radius-sm:10px;
+  --shadow:0 2px 16px rgba(50,74,182,.08);
+}
+body{font-family:'Nunito',sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+.app-header{background:linear-gradient(135deg,#324AB6,#F1228E);padding:20px 20px 36px;position:relative;overflow:hidden}
+.app-header::after{content:'';position:absolute;bottom:-20px;left:0;right:0;height:40px;background:var(--bg);border-radius:40px 40px 0 0}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;position:relative}
+.logo{font-size:16px;font-weight:800;color:#fff}
+.header-title{font-size:20px;font-weight:800;color:#fff;position:relative;margin-bottom:2px}
+.header-sub{font-size:12px;color:rgba(255,255,255,.85);position:relative}
+.refresh-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.content{padding:0 16px 80px}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);text-align:center}
+.stat-val{font-size:28px;font-weight:900;line-height:1}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px;font-weight:600}
+.tabs-panel{display:flex;gap:0;background:var(--white);border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow);overflow:hidden}
+.tab-panel{flex:1;padding:10px 4px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;transition:all .2s;text-align:center}
+.tab-panel.active{color:var(--mag);background:var(--mag-l)}
+.centro-bloque{background:var(--white);border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow);overflow:hidden}
+.centro-header{background:linear-gradient(135deg,#324AB6,#F1228E);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.centro-nombre{font-size:14px;font-weight:800;color:#fff}
+.centro-meta{font-size:11px;color:rgba(255,255,255,.8);margin-top:2px}
+.centro-badge{background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.cert-tabla{width:100%;border-collapse:collapse;font-size:11px}
+.cert-tabla th{background:#F7F3F9;padding:8px 10px;text-align:center;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap}
+.cert-tabla th:first-child{text-align:left}
+.cert-tabla td{padding:8px 10px;border-bottom:.5px solid var(--border);text-align:center;vertical-align:middle}
+.cert-tabla td:first-child{text-align:left}
+.cert-tabla tr:last-child td{border-bottom:none}
+.cert-tabla tr:hover td{background:#F7F3F9}
+.cert-nombre-td{font-size:12px;font-weight:700;color:var(--text)}
+.cert-cargo-td{font-size:10px;color:var(--text3)}
+.empty{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:14px;font-weight:700}
+.empty-sub{font-size:12px;margin-top:6px}
+.loading{text-align:center;padding:32px;color:var(--text3);font-size:13px;font-weight:700}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A1A;color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:700;opacity:0;transition:all .3s;z-index:500;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <div class="logo">🌸 FOOax</div>
+    <button class="refresh-btn" onclick="cargarDatos()">↻ Actualizar</button>
+  </div>
+  <div class="header-title">Panel de Dirección</div>
+  <div class="header-sub">Seguimiento de clientas en tiempo real</div>
+</div>
+
+<div class="content">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val" id="s-total">—</div><div class="stat-label">Clientas registradas</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-hoy">—</div><div class="stat-label">Nuevas hoy</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-semana">—</div><div class="stat-label">Esta semana</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-progreso">—</div><div class="stat-label">Con certificados</div></div>
+  </div>
+
+  <div class="tabs-panel">
+    <button class="tab-panel active" id="tab-centros" onclick="setTab('centros')">🏠 Por centro</button>
+    <button class="tab-panel" id="tab-lista" onclick="setTab('lista')">👥 Todas</button>
+    <button class="tab-panel" id="tab-certs" onclick="setTab('certs')">🎓 Certificados</button>
+  </div>
+
+  <div id="view-centros"><div class="loading">Cargando... 🌸</div></div>
+  <div id="view-lista" style="display:none"></div>
+  <div id="view-certs" style="display:none"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL='https://wbkznjbccjivlsveqqwp.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6India3puamJjY2ppdmxzdmVxcXdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjg5NzQsImV4cCI6MjA5NjYwNDk3NH0.eLCNfFMacFkhLIOYpZrvQHLNPcv_HJ9QHTBNHMr4S6U';
+
+const CURSOS=[
+  {key:'app',nombre:'App',emoji:'📱'},
+  {key:'semilla',nombre:'Semilla',emoji:'🌱'},
+  {key:'flor',nombre:'Flor',emoji:'🌺'},
+  {key:'cosecha',nombre:'Cosecha',emoji:'🌾'},
+  {key:'digital',nombre:'Digital',emoji:'💼'},
+  {key:'integral',nombre:'Integral',emoji:'🌟'},
+];
+const SESIONES_POR_NIVEL={app:8,semilla:10,flor:6,cosecha:10,digital:10,integral:10};
+
+let todasClientas=[];
+let progresoMap={};
+let tabActual='centros';
+
+async function supaGet(path){
+  const res=await fetch(SUPA_URL+'/rest/v1/'+path,{
+    headers:{
+      'apikey':SUPA_KEY,
+      'Authorization':'Bearer '+SUPA_KEY,
+      'Content-Type':'application/json',
+      'Accept':'application/json'
+    }
+  });
+  if(!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+  return res.json();
+}
+
+async function cargarDatos(){
+  const elCentros=document.getElementById('view-centros');
+  if(elCentros) elCentros.innerHTML='<div class="loading">Cargando... 🌸</div>';
+  try{
+    const clientas=await supaGet('clientas?select=*&order=created_at.desc');
+    todasClientas=Array.isArray(clientas)?clientas:[];
+
+    const prog=await supaGet('progreso_escuela?select=clienta_id,nivel,sesion,completada,correcta');
+    progresoMap={};
+    (Array.isArray(prog)?prog:[]).forEach(p=>{
+      if(!progresoMap[p.clienta_id])progresoMap[p.clienta_id]=[];
+      progresoMap[p.clienta_id].push(p);
+    });
+
+    const hoy=new Date();hoy.setHours(0,0,0,0);
+    const sem=new Date();sem.setDate(sem.getDate()-7);
+    const nuevasHoy=todasClientas.filter(c=>new Date(c.created_at)>=hoy).length;
+    const nuevasSem=todasClientas.filter(c=>new Date(c.created_at)>=sem).length;
+    const conCert=todasClientas.filter(c=>Object.values(getCerts(c.id)).some(Boolean)).length;
+
+    document.getElementById('s-total').textContent=todasClientas.length;
+    document.getElementById('s-hoy').textContent=nuevasHoy;
+    document.getElementById('s-semana').textContent=nuevasSem;
+    document.getElementById('s-progreso').textContent=conCert;
+
+    renderVista();
+  }catch(e){
+    document.getElementById('view-centros').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Error al cargar</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function getCerts(id){
+  const p=progresoMap[id]||[];
+  const c={};
+  CURSOS.forEach(cur=>{
+    const total=SESIONES_POR_NIVEL[cur.key]||10;
+    c[cur.key]=p.filter(x=>x.nivel===cur.key&&x.completada).length>=total;
+  });
+  return c;
+}
+
+function setTab(tab){
+  tabActual=tab;
+  document.querySelectorAll('.tab-panel').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  ['centros','lista','certs'].forEach(t=>{
+    document.getElementById('view-'+t).style.display=t===tab?'block':'none';
+  });
+  renderVista();
+}
+
+function renderVista(){
+  if(tabActual==='centros')renderPorCentro();
+  else if(tabActual==='lista')renderLista();
+  else renderCerts();
+}
+
+function renderPorCentro(){
+  const el=document.getElementById('view-centros');
+  if(!todasClientas.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">Sin clientas registradas</div><div class="empty-sub">Cuando las clientas abran la app aparecerán aquí</div></div>`;
+    return;
+  }
+  const centros={};
+  todasClientas.forEach(c=>{
+    const k=c.centro||'Sin centro asignado';
+    if(!centros[k])centros[k]=[];
+    centros[k].push(c);
+  });
+  el.innerHTML=Object.entries(centros).map(([centro,cls])=>{
+    const totalCerts=cls.reduce((s,c)=>s+Object.values(getCerts(c.id)).filter(Boolean).length,0);
+    const rows=cls.map(c=>{
+      const certs=getCerts(c.id);
+      return `<tr>
+        <td><div class="cert-nombre-td">${c.nombre}</div><div class="cert-cargo-td">${c.cargo||''} ${c.negocio?'· '+c.negocio:''}</div></td>
+        ${CURSOS.map(cur=>`<td>${certs[cur.key]?'✅':'⬜'}</td>`).join('')}
+      </tr>`;
+    }).join('');
+    return `<div class="centro-bloque">
+      <div class="centro-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div><div class="centro-nombre">🏠 ${centro}</div><div class="centro-meta">${cls.length} clienta${cls.length!==1?'s':''} · ${totalCerts} certificados</div></div>
+        <span class="centro-badge">${cls.length}</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="cert-tabla">
+          <thead><tr><th>Clienta</th>${CURSOS.map(c=>`<th>${c.emoji}<br>${c.nombre}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderLista(){
+  const el=document.getElementById('view-lista');
+  if(!todasClientas.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">Sin clientas</div></div>';return;}
+  el.innerHTML=`<div class="centro-bloque"><div style="overflow-x:auto">
+    <table class="cert-tabla">
+      <thead><tr><th>Clienta</th><th>Centro</th><th>Cargo</th>${CURSOS.map(c=>`<th>${c.emoji} ${c.nombre}</th>`).join('')}</tr></thead>
+      <tbody>${todasClientas.map(c=>{
+        const certs=getCerts(c.id);
+        return `<tr>
+          <td><div class="cert-nombre-td">${c.nombre}</div><div class="cert-cargo-td">${c.negocio||''}</div></td>
+          <td style="font-size:11px">${c.centro||'—'}</td>
+          <td style="font-size:11px">${c.cargo||'—'}</td>
+          ${CURSOS.map(cur=>`<td>${certs[cur.key]?'✅':'⬜'}</td>`).join('')}
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div></div>`;
+}
+
+function renderCerts(){
+  const el=document.getElementById('view-certs');
+  const con=todasClientas.filter(c=>Object.values(getCerts(c.id)).some(Boolean));
+  if(!con.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎓</div><div class="empty-text">Sin certificados aún</div><div class="empty-sub">Aparecerán aquí cuando las clientas completen sus cursos</div></div>';return;}
+  el.innerHTML=con.map(c=>{
+    const certs=getCerts(c.id);
+    const comp=CURSOS.filter(cur=>certs[cur.key]);
+    return `<div class="centro-bloque" style="padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--grad);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center">${c.nombre.charAt(0).toUpperCase()}</div>
+        <div><div style="font-size:13px;font-weight:800">${c.nombre}</div><div style="font-size:11px;color:var(--text3)">${c.centro||'Sin centro'} ${c.cargo?'· '+c.cargo:''}</div></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${comp.map(cur=>`<span style="background:var(--green-l);color:#085041;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">${cur.emoji} ${cur.nombre}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+cargarDatos();
+setInterval(cargarDatos,120000);
+</script>
+</body>
+</html>
